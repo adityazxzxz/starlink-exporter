@@ -1,0 +1,35 @@
+[Unit]
+Description=Starlink Exporter - Pushgateway Mode
+After=network.target
+
+[Service]
+Type=simple
+User=starlink
+Group=starlink
+WorkingDirectory=/opt/starlink_exporter
+ExecStart=/usr/local/bin/starlink_exporter \
+    -mode=pushgateway \
+    -source=live \
+    -pushgateway=http://192.168.1.10:9091 \
+    -job=starlink_exporter \
+    -instance=rpi-starlink-01 \
+    -interval=15s \
+    -address=192.168.100.1:9200 \
+    -log-level=info
+
+Restart=always
+RestartSec=10
+
+# Security and resource limits
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/starlink_exporter
+
+# Process limits
+LimitNOFILE=65536
+LimitNPROC=512
+
+[Install]
+WantedBy=multi-user.target

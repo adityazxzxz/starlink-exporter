@@ -1,0 +1,32 @@
+[Unit]
+Description=Starlink Exporter - Web Mode
+After=network.target
+
+[Service]
+Type=simple
+User=starlink
+Group=starlink
+WorkingDirectory=/opt/starlink_exporter
+ExecStart=/usr/local/bin/starlink_exporter \
+    -mode=web \
+    -source=live \
+    -listen=:9817 \
+    -address=192.168.100.1:9200 \
+    -log-level=info
+
+Restart=always
+RestartSec=10
+
+# Security and resource limits
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/starlink_exporter
+
+# Process limits
+LimitNOFILE=65536
+LimitNPROC=512
+
+[Install]
+WantedBy=multi-user.target
