@@ -1,150 +1,148 @@
-<p align="center">
-  <img alt="logo" src="https://github.com/danopstech/starlink_exporter/raw/main/.docs/assets/logo.jpg" height="150" />
-  <h3 align="center">Starlink Prometheus Exporter</h3>
-</p>
+# Starlink Exporter
 
----
-A [Starlink](https://www.starlink.com/) exporter for Prometheus. Not affiliated with or acting on behalf of Starlink(™)
+Exporter Prometheus standalone untuk mengumpulkan metrik dari Starlink Dish melalui gRPC. Mendukung dua mode pengiriman: **Web** (untuk scraping langsung oleh Prometheus) dan **Pushgateway** (untuk push metrik secara berkala).
 
-[![goreleaser](https://github.com/danopstech/starlink_exporter/actions/workflows/release.yaml/badge.svg)](https://github.com/danopstech/starlink_exporter/actions/workflows/release.yaml)
-[![build](https://github.com/danopstech/starlink_exporter/actions/workflows/build.yaml/badge.svg)](https://github.com/danopstech/starlink_exporter/actions/workflows/build.yaml)
-[![License](https://img.shields.io/github/license/danopstech/starlink_exporter)](/LICENSE)
-[![Release](https://img.shields.io/github/release/danopstech/starlink_exporter.svg)](https://github.com/danopstech/starlink_exporter/releases/latest)
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/danopstech/starlink_exporter)
-![os/arch](https://img.shields.io/badge/os%2Farch-amd64-yellow)
-![os/arch](https://img.shields.io/badge/os%2Farch-arm64-yellow)
-![os/arch](https://img.shields.io/badge/os%2Farch-armv7-yellow)
-[![Go Report Card](https://goreportcard.com/badge/github.com/danopstech/starlink_exporter)](https://goreportcard.com/report/github.com/danopstech/starlink_exporter)
+## Build
 
-If you would like a pre-packaged system to monitor you Starlink system please check out https://github.com/danopstech/starlink. It includes this exporter, speedtest_exporter, blackbox_exporter, Grafana and Prometheus in one Docker Compose file.
-
-## Usage:
-
-### Flags
-
-`starlink_exporter` is configured through the use of optional command line flags
+Pastikan Anda memiliki Go 1.16 atau lebih tinggi.
 
 ```bash
-$ ./starlink_exporter --help
-Usage of starlink_exporter
-  -address string
-        IP address and port to reach dish (default "192.168.100.1:9200")
-  -port string
-        listening port to expose metrics on (default "9817")
+# Build untuk platform saat ini
+go build -o starlink-exporter
 
+# Build untuk ARM64 (Raspberry Pi 4)
+GOOS=linux GOARCH=arm64 go build -o starlink-exporter-arm64
+
+# Build untuk ARMv7 (Raspberry Pi 3/Zero)
+GOOS=linux GOARCH=arm go build -o starlink-exporter-armv7
 ```
 
-### Binaries
+## Penggunaan
 
-For pre-built binaries please take a look at the [releases](https://github.com/danopstech/starlink_exporter/releases).
+### Mode Web (Scraping Langsung)
+
+Jalankan exporter dengan mode web (default) dan sumber live:
 
 ```bash
-./starlink_exporter [flags]
+./starlink-exporter -mode=web -source=live
 ```
 
-### Docker
+Prometheus akan scrape metrik di `http://localhost:9817/metrics`
 
-Docker Images can be found at [GitHub Container Registry](https://github.com/orgs/danopstech/packages/container/package/starlink_exporter) & [Dockerhub](https://hub.docker.com/r/danopstech/starlink_exporter).
+**Contoh dengan custom listen address:**
 
-Example:
 ```bash
-docker pull ghcr.io/danopstech/starlink_exporter:latest
-
-docker run \
-  -p 9817:9817 \
-  ghcr.io/danopstech/starlink_exporter:latest [flags]
+./starlink-exporter -mode=web -source=live -listen=:8080
 ```
 
-### Setup Prometheus to scrape `starlink_exporter`
+**Menggunakan dummy data (tanpa Starlink dish):**
 
-Configure [Prometheus](https://prometheus.io/) to scrape metrics from localhost:9817/metrics
-
-```yaml
-...
-scrape_configs
-    - job_name: starlink
-      scrape_interval: 3s
-      scrape_timeout:  3s
-      static_configs:
-        - targets: ['localhost:9817']
-...
+```bash
+./starlink-exporter -mode=web -source=dummy
 ```
 
-## Exported Metrics:
+### Mode Pushgateway
 
-```text
-# HELP starlink_dish_alert_mast_not_near_vertical Status of mast position
-# TYPE starlink_dish_alert_mast_not_near_vertical gauge
-# HELP starlink_dish_alert_motors_stuck Status of motor stuck
-# TYPE starlink_dish_alert_motors_stuck gauge
-# HELP starlink_dish_alert_slow_eth_speeds Status of ethernet
-# TYPE starlink_dish_alert_slow_eth_speeds gauge
-# HELP starlink_dish_alert_thermal_shutdown Status of thermal shutdown
-# TYPE starlink_dish_alert_thermal_shutdown gauge
-# HELP starlink_dish_alert_thermal_throttle Status of thermal throttling
-# TYPE starlink_dish_alert_thermal_throttle gauge
-# HELP starlink_dish_alert_unexpected_location Status of location
-# TYPE starlink_dish_alert_unexpected_location gauge
-# HELP starlink_dish_backup_beam connected to backup beam
-# TYPE starlink_dish_backup_beam gauge
-# HELP starlink_dish_bore_sight_azimuth_deg azimuth in degrees
-# TYPE starlink_dish_bore_sight_azimuth_deg gauge
-# HELP starlink_dish_bore_sight_elevation_deg elevation in degrees
-# TYPE starlink_dish_bore_sight_elevation_deg gauge
-# HELP starlink_dish_cell_id Cell ID dish is located in
-# TYPE starlink_dish_cell_id gauge
-# HELP starlink_dish_currently_obstructed Status of view of the sky
-# TYPE starlink_dish_currently_obstructed gauge
-# HELP starlink_dish_downlink_throughput_bytes Amount of bandwidth in bytes per second download
-# TYPE starlink_dish_downlink_throughput_bytes gauge
-# HELP starlink_dish_first_nonempty_slot_seconds Seconds to next non empty slot
-# TYPE starlink_dish_first_nonempty_slot_seconds gauge
-# HELP starlink_dish_fraction_obstruction_ratio Percentage of obstruction
-# TYPE starlink_dish_fraction_obstruction_ratio gauge
-# HELP starlink_dish_info Running software versions and IDs of hardware
-# TYPE starlink_dish_info gauge
-# HELP starlink_dish_initial_gateway_id initial gateway id
-# TYPE starlink_dish_initial_gateway_id gauge
-# HELP starlink_dish_initial_satellite_id initial satellite id
-# TYPE starlink_dish_initial_satellite_id gauge
-# HELP starlink_dish_last_24h_obstructed_seconds Number of seconds view of sky has been obstructed in the last 24hours
-# TYPE starlink_dish_last_24h_obstructed_seconds gauge
-# HELP starlink_dish_pop_ping_drop_ratio Percent of pings dropped
-# TYPE starlink_dish_pop_ping_drop_ratio gauge
-# HELP starlink_dish_pop_ping_latency_seconds Latency of connection in seconds
-# TYPE starlink_dish_pop_ping_latency_seconds gauge
-# HELP starlink_dish_pop_rack_id pop rack id
-# TYPE starlink_dish_pop_rack_id gauge
-# HELP starlink_dish_prolonged_obstruction_duration_seconds Average in seconds of prolonged obstructions
-# TYPE starlink_dish_prolonged_obstruction_duration_seconds gauge
-# HELP starlink_dish_prolonged_obstruction_interval_seconds Average prolonged obstruction interval in seconds
-# TYPE starlink_dish_prolonged_obstruction_interval_seconds gauge
-# HELP starlink_dish_scrape_duration_seconds Time to scrape metrics from starlink dish
-# TYPE starlink_dish_scrape_duration_seconds gauge
-# HELP starlink_dish_snr Signal strength of the connection
-# TYPE starlink_dish_snr gauge
-# HELP starlink_dish_state The current dishState of the Dish (Unknown, Booting, Searching, Connected).
-# TYPE starlink_dish_state gauge
-# HELP starlink_dish_time_to_slot_end_seconds Seconds left on current slot
-# TYPE starlink_dish_time_to_slot_end_seconds gauge
-# HELP starlink_dish_up Was the last query of Starlink dish successful.
-# TYPE starlink_dish_up gauge
-# HELP starlink_dish_uplink_throughput_bytes Amount of bandwidth in bytes per second upload
-# TYPE starlink_dish_uplink_throughput_bytes gauge
-# HELP starlink_dish_uptime_seconds Dish running time
-# TYPE starlink_dish_uptime_seconds gauge
-# HELP starlink_dish_valid_seconds Unknown
-# TYPE starlink_dish_valid_seconds gauge
-# HELP starlink_dish_wedge_abs_fraction_obstruction_ratio Percentage of Absolute fraction per wedge section
-# TYPE starlink_dish_wedge_abs_fraction_obstruction_ratio gauge
-# HELP starlink_dish_wedge_fraction_obstruction_ratio Percentage of obstruction per wedge section
-# TYPE starlink_dish_wedge_fraction_obstruction_ratio gauge
+Push metrik secara berkala ke Pushgateway:
+
+```bash
+./starlink-exporter -mode=pushgateway -source=live \
+  -pushgateway=http://localhost:9091
 ```
 
-## Example Grafana Dashboard:
+**Dengan custom job dan instance:**
 
-https://grafana.com/grafana/dashboards/14337
+```bash
+./starlink-exporter -mode=pushgateway -source=live \
+  -pushgateway=http://pushgateway.example.com:9091 \
+  -job=starlink \
+  -instance=my-dish \
+  -interval=30s
+```
 
-<p align="center">
-	<img src="https://github.com/danopstech/starlink_exporter/raw/main/.docs/assets/screenshot.jpg" width="95%">
-</p>
+**Menggunakan dummy data dengan pushgateway:**
+
+```bash
+./starlink-exporter -mode=pushgateway -source=dummy \
+  -pushgateway=http://localhost:9091
+```
+
+## Command Line Arguments
+
+| Flag | Default | Deskripsi |
+|------|---------|-----------|
+| `-mode` | `web` | Delivery mode: `web` (HTTP server) atau `pushgateway` (push ke Pushgateway) |
+| `-source` | `live` | Metrics source: `live` (dari Starlink dish) atau `dummy` (data simulasi) |
+| `-listen` | `:9817` | Listen address untuk web mode (contoh: `:9817`, `0.0.0.0:8080`) |
+| `-address` | `192.168.100.1:50051` | IP address dan port untuk reach Starlink dish (live mode only) |
+| `-pushgateway` | `` | Pushgateway URL (required untuk pushgateway mode, contoh: `http://localhost:9091`) |
+| `-job` | `starlink_exporter` | Job name untuk pushgateway |
+| `-instance` | `starlink_dish` | Instance name untuk pushgateway |
+| `-interval` | `15s` | Push interval untuk pushgateway mode (contoh: `30s`, `1m`) |
+| `-log-level` | `info` | Log level: `debug`, `info`, `warn`, `error` |
+
+## Contoh Penggunaan
+
+### 1. Web Mode dengan Dish Asli
+
+```bash
+./starlink-exporter -mode=web -source=live -address=192.168.100.1:50051
+```
+
+Akses metrik di: `http://localhost:9817/metrics`
+
+### 2. Web Mode dengan Dummy Data
+
+```bash
+./starlink-exporter -mode=web -source=dummy
+```
+
+Berguna untuk testing dan development tanpa hardware Starlink.
+
+### 3. Pushgateway Mode dengan Dish Asli
+
+```bash
+./starlink-exporter -mode=pushgateway -source=live \
+  -pushgateway=http://prometheus-stack.local:9091 \
+  -job=starlink \
+  -interval=60s
+```
+
+### 4. Pushgateway Mode dengan Dummy Data
+
+```bash
+./starlink-exporter -mode=pushgateway -source=dummy \
+  -pushgateway=http://localhost:9091 \
+  -interval=30s
+```
+
+### 5. Debug dengan Log Level Verbose
+
+```bash
+./starlink-exporter -mode=web -source=live -log-level=debug
+```
+
+## Metrik
+
+Exporter mengumpulkan metrik Starlink berikut:
+
+- **Download speed** (bytes/sec)
+- **Upload speed** (bytes/sec)
+- **Latency** (ms)
+- **Packet loss** (%)
+- **Signal-to-noise ratio** (dB)
+- **Obstruction percentage** (%)
+- **Uptime** (seconds)
+- **Connection state** dan alerts
+
+## Health Check
+
+Untuk web mode, endpoint `/health` tersedia untuk memeriksa status koneksi gRPC ke Starlink dish:
+
+```bash
+curl http://localhost:9817/health
+```
+
+## License
+
+Lihat file LICENSE
