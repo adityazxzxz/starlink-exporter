@@ -143,6 +143,11 @@ Untuk web mode, endpoint `/health` tersedia untuk memeriksa status koneksi gRPC 
 curl http://localhost:9817/health
 ```
 
+## Install Release
+wget -O install.sh https://raw.githubusercontent.com/username/repo/main/install.sh
+chmod +x install.sh
+sudo ./install.sh
+
 ## License
 
 Lihat file LICENSE

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="v1.0.0"
+VERSION="v1.0.1"
 BINARY_URL="https://github.com/adityazxzxz/starlink-exporter/releases/download/${VERSION}/starlink-exporter-arm64"
 INSTALL_PATH="/usr/local/bin/starlink-exporter"
 SERVICE_FILE="/etc/systemd/system/starlink-exporter@.service"
